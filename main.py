@@ -4,13 +4,16 @@ Python Site Backend Finder  - Quey Development
 
 Creators: NeonTheDev, Cuts, Timanttikuutio
 
-Contact: Cuts#0001, Neon#2928 (neon@neonthe.dev), Timanttikuutio#0001
+Collaborators: NEXUS#7496
+
+Contact: Cuts#0001, Neon#2928 (neon@neonthe.dev), Timanttikuutio#0001, NEXUS#7496
 
 Please give credits if this code is used.
 
 Streamed live on https://twitch.tv/QueyDev
 ----------------------------------------------
 '''
+
 # Imports
 import json
 import os
@@ -19,38 +22,48 @@ import random
 import time
 import threading
 import discord
+import socket
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
 
 with open("files/config.json", "r") as fp:
     config = json.loads(fp.read())
 
-
-def createip():
-    ip = f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"  # Generate the IP to check
-    #ip = "157.90.107.165" #check discord cuts
-    return ip
-
+if '-d' in sys.argv: debug = True
+else: debug = False
 
 def checkip():
     badcodes = []
-    while True:
-
-        ip = createip()
-        print(f"Scanning IP: {ip}\n")
-
-        with open("files/ips.txt", "a+") as fp:
-            fp.write(ip + "\n")
-
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)
+    while 1:
         try:
-            check = requests.get(f'https://{ip}:80', timeout=1)  # Scan the IP for a HTTP connection.
+            ip = f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
+            with open("files/ips.txt", "a+") as fp:
+                fp.write(ip + "\n")
+
+            try:
+                #check = requests.get(f'http://{ip}:80', timeout=1)  # Scan the IP for a HTTP conection.
+                check = sock.connect_ex((ip, 80))
+                if debug: print(f'HIT! IP: http://{ip}') # MIGHT CRASH
+            except requests.exceptions.ConnectionError:  # If the connection is unavailable, pass.
+                #check = requests.get(f'https://{ip}:80', timeout=1)
+                check = sock.connect_ex((ip, 443))
+                if debug: print(f'HIT! IP: https://{ip}') # MIGHT CRASH
+
+            #if str(check.status_code) not in badcodes:  # Checking if its a good response code.
+            if check == 0:
+                ipinfo(ip)  # Create the embed by calling the ipinfo function.
+
         except requests.exceptions.ConnectionError:  # If the connection is unavailable, pass.
             pass
-        else:
-            if str(check.status_code) == "200":  # Checking if its a good response code.
-                ipinfo(ip)  # Create the embed by calling the ip info function.
 
+        except KeyboardInterrupt:
+            sys.exit()
+
+        except Exception as e:  #
+            print(e)
+            pass
 
 def send_screenshot(url):
     chromeopts = Options()
@@ -71,43 +84,45 @@ def ipinfo(ip):
         print("Blocked ISP: " + geo.get("isp"))
         pass
     else:
-        send_screenshot(f"http://{ip}")
+        try:
+            send_screenshot(f"http://{ip}")
 
-        webhook = discord.Webhook.from_url(random.choice(config["webhooks"]),
-                                           adapter=discord.RequestsWebhookAdapter(requests.session()))
+            webhook = discord.Webhook.from_url(random.choice(config["webhooks"]), adapter=discord.RequestsWebhookAdapter(requests.session()))
+            webhook.send(
+                file=discord.File("screenshot.png", filename="screenshot.png"),
+                embed=discord.Embed.from_dict({
+                    "title": f"SITE SCANNER: {ip}",
+                    "description": "Site found on this IP.",
+                    "fields": [
+                        {'name': 'IP', 'value': ipaddr},
+                        {'name': 'IP Type', 'value': geo.get("ipType")},
+                        {'name': 'Country', 'value': geo.get("country")},
+                        {'name': 'City', 'value': geo.get("city")},
+                        {'name': 'Continent', 'value': geo.get("continent")},
+                        {'name': 'Country', 'value': geo.get("country")},
+                        {'name': 'Region', 'value': geo.get("region")},
+                        {'name': 'ISP', 'value': geo.get("isp")},
+                        {'name': 'Org', 'value': geo.get("org")}
+                    ],
+                    "image": {"url": "attachment://screenshot.png"},
+                    "footer": {
+                        "text": "Quey development",
+                    }
+                })
+            )
+        except:
+            pass
 
-        webhook.send(
-            file=discord.File("screenshot.png", filename="screenshot.png"),
-            embed=discord.Embed.from_dict({
-                "title": f"SITE SCANNER: {ip}",
-                "description": "Site found on this IP.",
-                "fields": [
-                    {'name': 'IP', 'value': ipaddr},
-                    {'name': 'IP Type', 'value': geo.get("ipType")},
-                    {'name': 'Country', 'value': geo.get("country")},
-                    {'name': 'City', 'value': geo.get("city")},
-                    {'name': 'Continent', 'value': geo.get("continent")},
-                    {'name': 'Country', 'value': geo.get("country")},
-                    {'name': 'Region', 'value': geo.get("region")},
-                    {'name': 'ISP', 'value': geo.get("isp")},
-                    {'name': 'Org', 'value': geo.get("org")}
-                ],
-                "image": {"url": "attachment://screenshot.png"},
-                "footer": {
-                    "text": "Quey development",
-                }
-            })
-        )
 
-
-def main(thread):
-    print(f"Starting thread: {thread + 1}")
+def main():
+    print('Thread started!')
     checkip()
 
-
-threads = []
-for k in range(config["threads"]):
-    t = threading.Thread(target=main, args=(k,))
-    threads.append(t)
-    t.start()
-#the issue is webdriver dm me the error message
+if __name__ == '__main__':
+    with open('ips.txt', 'w+') as nig: pass
+    threads = []
+    for k in range(100):
+        t = threading.Thread(target=main, daemon=True)
+        threads.append(t)
+        t.start()
+    input('Scanning.')
