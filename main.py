@@ -39,7 +39,7 @@ def checkip():
     while 1:
         try:
             ip = f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
-            with open("ips.txt", "a+") as fp:
+            with open("files/ips.txt", "a+") as fp:
                 fp.write(ip + "\n")
 
             try:
@@ -56,7 +56,7 @@ def checkip():
                 ipinfo(ip)  # Create the embed by calling the ipinfo function.
 
         except requests.exceptions.ConnectionError:  # If the connection is unavailable, pass.
-            print('Connection neh')
+            pass
 
         except KeyboardInterrupt:
             sys.exit()
