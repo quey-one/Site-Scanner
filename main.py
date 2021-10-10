@@ -89,13 +89,16 @@ def ipinfo(ip):
 
             webhook = discord.Webhook.from_url(random.choice(config["webhooks"]), adapter=discord.RequestsWebhookAdapter(requests.session()))
             webhook.send(
+                username='Quey Backend Scanner', 
+                avatar_url='https://avatars.githubusercontent.com/u/91619825?s=200&v=4',
                 file=discord.File("screenshot.png", filename="screenshot.png"),
                 embed=discord.Embed.from_dict({
-                    "title": f"SITE SCANNER: {ip}",
+                    "title": f"SITE SCANNER: {geo.get('query')}",
                     "description": "Site found on this IP.",
                     "fields": [
-                        {'name': 'IP', 'value': ipaddr},
+                        {'name': 'IP', 'value': geo.get("query")},
                         {'name': 'IP Type', 'value': geo.get("ipType")},
+                        {'name': 'Hostname', 'value': socket.gethostbyaddr(geo.get('query'))[0]},
                         {'name': 'Country', 'value': geo.get("country")},
                         {'name': 'City', 'value': geo.get("city")},
                         {'name': 'Continent', 'value': geo.get("continent")},
@@ -112,7 +115,6 @@ def ipinfo(ip):
             )
         except:
             pass
-
 
 def main():
     print('Thread started!')
