@@ -12,6 +12,7 @@ Streamed live on https://twitch.tv/QueyDev
 ----------------------------------------------
 '''
 # Imports
+import json
 import os
 import requests
 import random
@@ -22,7 +23,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-webhookurls = ["https://canary.discord.com/api/webhooks/896715728760213534/NhI_DKimNDFcRnsQK0q5mgXYS_XjASCsG2tYLJypJu95PslK_tlIJH391G3JpDAVroAO", "https://canary.discord.com/api/webhooks/896715725052444673/ZmjVKdD9Qq9oddwDU5X2grAbRlHS1GR7RWDyB1tRpKk1hAEIwcb9pZ0LBUSRrDJqNAkw", "https://canary.discord.com/api/webhooks/896715722082897920/KbufkeMYu_0gZQrwT2XZFku1Ya1Dwj30_S37wHs2TJzAZbgIj72sqiUa_JDHn4dC5Zzo", "https://canary.discord.com/api/webhooks/896715712708632577/XYF7mk6IPKj9YBbukRiFtwIEiDO7pZAEQ6XQCwz1iQIHVJ7PQ6MHlGbyiGgfcJn4LhVV"]
+with open("files/config.json", "r") as fp:
+    config = json.loads(fp.read())
 
 
 def createip():
@@ -71,7 +73,7 @@ def ipinfo(ip):
     else:
         send_screenshot(f"http://{ip}")
 
-        webhook = discord.Webhook.from_url(random.choice(webhookurls),
+        webhook = discord.Webhook.from_url(random.choice(config["webhooks"]),
                                            adapter=discord.RequestsWebhookAdapter(requests.session()))
 
         webhook.send(
@@ -104,7 +106,7 @@ def main(thread):
 
 
 threads = []
-for k in range(200):
+for k in range(config["threads"]):
     t = threading.Thread(target=main, args=(k,))
     threads.append(t)
     t.start()
