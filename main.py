@@ -89,11 +89,17 @@ def ipinfo(ip, port):
                 pass
             webhook = discord.Webhook.from_url(config['webhooks'], adapter=discord.RequestsWebhookAdapter(requests.session()))
             webhook.send(
+                username='Quey Backend Scanner', 
+                avatar_url='https://avatars.githubusercontent.com/u/91619825?s=200&v=4',
                 file=discord.File("screenshot.png", filename="screenshot.png"),
                 embed=discord.Embed.from_dict({
                     "title": f"Site Finder",
                     "description": "Site found on this IP.",
                     "fields": [
+
+                        {'name': 'IP', 'value': geo.get("query")},
+                        {'name': 'IP Type', 'value': geo.get("ipType")},
+                        {'name': 'Hostname', 'value': socket.gethostbyaddr(ip)[0]},
                         {'name': 'IP', 'value': ipaddr+f":{port}"},
                         {'name': 'IP Type', 'value': geo.get("ipType")},
                         {'name': 'Website Title', 'value': _tit},
@@ -113,7 +119,6 @@ def ipinfo(ip, port):
             
         except:
             pass
-
 
 def main():
     checkip()
